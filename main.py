@@ -10,9 +10,14 @@ from pdf2image import convert_from_path
 import os
 
 # ======================================
-# INITIALIZE GOOGLE EARTH ENGINE
+# INITIALIZE GOOGLE EARTH ENGINE (SAFE)
 # ======================================
-ee.Initialize(project="dotted-empire-477317-b8")
+try:
+    ee.Initialize()
+except Exception:
+    ee.Authenticate()
+    ee.Initialize(project="dotted-empire-477317-b8")
+
 
 # ======================================
 # FASTAPI SETUP

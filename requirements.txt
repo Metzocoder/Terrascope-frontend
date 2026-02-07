@@ -1,5 +1,10 @@
-fastapi
-uvicorn
-python-dotenv
-requests
-supabase
+fastapi==0.110.0
+uvicorn==0.27.1
+earthengine-api==0.1.392
+easyocr==1.7.1
+opencv-python-headless==4.9.0.80
+numpy==1.26.4
+pillow==10.2.0
+pdf2image==1.17.0
+python-multipart==0.0.9
+pydantic==2.6.4
