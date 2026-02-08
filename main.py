@@ -334,12 +334,12 @@ def save_land(data: LandSaveRequest):
 
 
 # ======================================
-# MAIN ANALYSIS ENDPOINT (UNCHANGED)
+# MAIN ANALYSIS ENDPOINT (FIXED)
 # ======================================
 @app.post("/analyze-field")
 def analyze_field(data: FieldRequest):
 
-        if not GEE_INITIALIZED:
+    if not GEE_INITIALIZED:
         return {
             "error": "Google Earth Engine not initialized",
             "details": GEE_ERROR
@@ -383,32 +383,25 @@ def analyze_field(data: FieldRequest):
     if stats.get("NDVI") is None:
         return {"error": "No usable satellite data"}
 
-    # ✅ CROP-SPECIFIC INTERPRETATION (FIXED POSITION)
     crop = data.crop or "general"
 
     ndvi_val = round(stats["NDVI"], 3)
     ndmi_val = round(stats["NDMI"], 3)
 
-    # 🔥 GENERATE NDVI HEATMAP IMAGE
     ndvi_map_url = generate_ndvi_thumbnail(ndvi, geometry)
 
     return {
         "geometry_type": geometry_type,
-
         "ndvi": {
             "value": ndvi_val,
             "meaning": interpret_ndvi(ndvi_val, crop)
         },
-
         "ndmi": {
             "value": ndmi_val,
             "meaning": interpret_ndmi(ndmi_val, crop)
         },
-
         "crop": crop,
         "analysis_window_days": 30,
-
-        # 🟢 THIS IS WHAT YOUR FRONTEND NEEDS
         "map_image_url": ndvi_map_url
     }
 
