@@ -31,6 +31,9 @@ WORKDIR /app
 # ===============================
 COPY requirements.txt .
 
+ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
+
+
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
