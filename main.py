@@ -8,15 +8,20 @@ import easyocr
 import re
 from pdf2image import convert_from_path
 import os
+import json
 
 # ======================================
-# INITIALIZE GOOGLE EARTH ENGINE (SAFE)
+# INITIALIZE GOOGLE EARTH ENGINE (PRODUCTION SAFE)
 # ======================================
+GEE_INITIALIZED = False
+
 try:
-    ee.Initialize()
-except Exception:
-    ee.Authenticate()
     ee.Initialize(project="dotted-empire-477317-b8")
+    GEE_INITIALIZED = True
+    print("🟢 Google Earth Engine initialized successfully")
+except Exception as e:
+    print("🔴 Google Earth Engine initialization FAILED")
+    print(str(e))
 
 
 # ======================================
@@ -37,6 +42,9 @@ app.add_middleware(
 # ======================================
 # OCR INITIALIZATION
 # ======================================
+os.environ["EASYOCR_MODULE_PATH"] = "/tmp/easyocr"
+os.makedirs("/tmp/easyocr", exist_ok=True)
+
 ocr_reader = easyocr.Reader(['mr', 'en'], gpu=False)
 
 def run_ocr(image_path: str):
