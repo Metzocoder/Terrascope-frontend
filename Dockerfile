@@ -1,30 +1,50 @@
 FROM python:3.10-slim
 
-# Prevent Python from buffering logs
+# ===============================
+# Basic env safety
+# ===============================
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies for OCR + PDF
+# ===============================
+# System dependencies
+# ===============================
+# - poppler-utils → pdf2image
+# - tesseract-ocr → EasyOCR backend
+# - libgl1 + libglib → OpenCV / EasyOCR runtime
 RUN apt-get update && apt-get install -y \
     poppler-utils \
     tesseract-ocr \
     libgl1 \
     libglib2.0-0 \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Set work directory
+# ===============================
+# Workdir
+# ===============================
 WORKDIR /app
 
-# Copy requirements first (better Docker caching)
+# ===============================
+# Python deps (cached layer)
+# ===============================
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-# Copy application code
+# ===============================
+# App code
+# ===============================
 COPY . .
 
-# Expose Render port
+# ===============================
+# Render port (DO NOT change)
+# ===============================
 EXPOSE 10000
 
-# Start FastAPI
+# ===============================
+# Start FastAPI (Render-compatible)
+# ===============================
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]

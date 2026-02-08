@@ -11,23 +11,35 @@ import os
 import json
 
 # ======================================
+# ======================================
 # INITIALIZE GOOGLE EARTH ENGINE (PRODUCTION SAFE)
 # ======================================
 GEE_INITIALIZED = False
+GEE_ERROR = None
 
 try:
     ee.Initialize(project="dotted-empire-477317-b8")
     GEE_INITIALIZED = True
-    print("🟢 Google Earth Engine initialized successfully")
+    print("🟢 GEE initialized using default credentials")
 except Exception as e:
-    print("🔴 Google Earth Engine initialization FAILED")
-    print(str(e))
+    GEE_ERROR = str(e)
+    print("🔴 GEE initialization failed")
+    print(GEE_ERROR)
 
 
 # ======================================
 # FASTAPI SETUP
 # ======================================
 app = FastAPI()
+
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "gee_initialized": GEE_INITIALIZED,
+        "gee_error": GEE_ERROR
+    }
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -326,6 +338,12 @@ def save_land(data: LandSaveRequest):
 # ======================================
 @app.post("/analyze-field")
 def analyze_field(data: FieldRequest):
+
+        if not GEE_INITIALIZED:
+        return {
+            "error": "Google Earth Engine not initialized",
+            "details": GEE_ERROR
+        }
 
     if data.polygon:
         geometry = ee.Geometry.Polygon(data.polygon)
