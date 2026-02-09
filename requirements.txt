@@ -1,14 +1,7 @@
 fastapi
 uvicorn
 earthengine-api
-easyocr==1.7.1
-opencv-python-headless
 numpy
 pillow
-pdf2image
-python-multipart
 pydantic
-
-# 🔒 FORCE CPU-ONLY TORCH
-torch==2.2.2+cpu
-torchvision==0.17.2+cpu
+python-multipart
