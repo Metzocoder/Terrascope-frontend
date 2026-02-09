@@ -1,53 +1,22 @@
 FROM python:3.10-slim
 
-# ===============================
-# Basic env safety
-# ===============================
+# Prevent Python buffering (important for logs)
 ENV PYTHONUNBUFFERED=1
-ENV PIP_NO_CACHE_DIR=1
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# ===============================
-# System dependencies
-# ===============================
-# - poppler-utils → pdf2image
-# - tesseract-ocr → EasyOCR backend
-# - libgl1 + libglib → OpenCV / EasyOCR runtime
-RUN apt-get update && apt-get install -y \
-    poppler-utils \
-    tesseract-ocr \
-    libgl1 \
-    libglib2.0-0 \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# ===============================
-# Workdir
-# ===============================
+# Set work directory
 WORKDIR /app
 
-# ===============================
-# Python deps (cached layer)
-# ===============================
+# Copy requirements
 COPY requirements.txt .
 
-ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
-
-# ===============================
-# App code
-# ===============================
+# Copy app code
 COPY . .
 
-# ===============================
-# Render port (DO NOT change)
-# ===============================
+# Render uses port 10000
 EXPOSE 10000
 
-# ===============================
-# Start FastAPI (Render-compatible)
-# ===============================
+# Start FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
