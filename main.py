@@ -6,19 +6,34 @@ import ee
 import datetime
 
 # =====================================================
-# GOOGLE EARTH ENGINE INITIALIZATION
+# GOOGLE EARTH ENGINE INITIALIZATION (SERVICE ACCOUNT)
 # =====================================================
+import json
+
 GEE_INITIALIZED = False
 GEE_ERROR = None
 
 try:
-    ee.Initialize(project="dotted-empire-477317-b8")
+    SERVICE_ACCOUNT_FILE = "gee-key.json"
+
+    with open(SERVICE_ACCOUNT_FILE) as f:
+        service_account_info = json.load(f)
+
+    credentials = ee.ServiceAccountCredentials(
+        service_account_info["client_email"],
+        SERVICE_ACCOUNT_FILE
+    )
+
+    ee.Initialize(credentials, project="dotted-empire-477317-b8")
+
     GEE_INITIALIZED = True
-    print("🟢 Google Earth Engine initialized")
+    print("🟢 Google Earth Engine initialized with service account")
+
 except Exception as e:
     GEE_ERROR = str(e)
     print("🔴 Google Earth Engine init failed")
     print(GEE_ERROR)
+
 
 # =====================================================
 # FASTAPI SETUP
