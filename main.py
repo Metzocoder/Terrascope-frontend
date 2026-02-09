@@ -4,34 +4,36 @@ from pydantic import BaseModel
 from typing import Optional, List
 import ee
 import datetime
+import json
+import os 
 
 # =====================================================
 # GOOGLE EARTH ENGINE INITIALIZATION (SERVICE ACCOUNT)
 # =====================================================
-import json
-
 GEE_INITIALIZED = False
 GEE_ERROR = None
 
 try:
-    SERVICE_ACCOUNT_FILE = "gee-key.json"
-
-    with open(SERVICE_ACCOUNT_FILE) as f:
-        service_account_info = json.load(f)
+    service_account_info = json.loads(
+        os.environ["GEE_SERVICE_ACCOUNT_JSON"]
+    )
 
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
-        SERVICE_ACCOUNT_FILE
+        key_data=json.dumps(service_account_info)
     )
 
-    ee.Initialize(credentials, project="dotted-empire-477317-b8")
+    ee.Initialize(
+        credentials=credentials,
+        project=service_account_info["project_id"]
+    )
 
     GEE_INITIALIZED = True
-    print("🟢 Google Earth Engine initialized with service account")
+    print("🟢 GEE initialized using env credentials")
 
 except Exception as e:
     GEE_ERROR = str(e)
-    print("🔴 Google Earth Engine init failed")
+    print("🔴 GEE init failed")
     print(GEE_ERROR)
 
 
