@@ -6,3 +6,4 @@ scikit-image
 joblib
 numpy
 earthengine-api
+python-multipart
