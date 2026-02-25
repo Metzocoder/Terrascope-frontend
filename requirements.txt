@@ -1,7 +1,8 @@
 fastapi
 uvicorn
-earthengine-api
+scikit-learn==1.6.1
+opencv-python-headless
+scikit-image
+joblib
 numpy
-pillow
-pydantic
-python-multipart
+earthengine-api
