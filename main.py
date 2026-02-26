@@ -381,21 +381,25 @@ async def analyze_nir_image(file: UploadFile = File(...)):
 
     features = extract_nir_features(img)
     
-    # ── VALIDATION HEURISTIC ──
-    # features[0][0] is vi_mean (Vegetation Index)
-    # features[0][6] is edge_density
+    # ── VALIDATION HEURISTIC (FIXED) ──
+    # features[0][0] is vi_mean (Vegetation Index) where vi = (r - g) / (r + g)
+    # For green leaves, g > r, so vi_mean is NEGATIVE (e.g., -0.3 to -0.6).
+    # For non-plants (skin, walls, dirt), r >= g, so vi_mean is POSITIVE or zero.
     vi_mean = features[0][0]
     edge_density = features[0][6]
     
-    # Heuristic: Plant images typically have high VI (green contrast) 
-    # and a certain range of edge density (organic structure).
-    # Attendance photos/faces/rooms usually have low VI or very different texture.
-    is_plant = (vi_mean > -0.05) and (edge_density > 0.01)
+    print(f"🔍 NIR VALIDATION: VI={vi_mean:.4f}, Texture={edge_density:.4f}")
+
+    # Heuristic: 
+    # 1. Must be green enough (vi_mean < -0.05)
+    # 2. Must have minimal organic texture/edges (edge_density > 0.015)
+    is_plant = (vi_mean < -0.05) and (edge_density > 0.015)
     
     if not is_plant:
+        print("❌ VALIDATION FAILED: Image rejected as non-plant specimen.")
         return {
             "error": "invalid_specimen",
-            "message": "The image does not look like a valid plant specimen. Please ensure the leaf is clearly visible and well-lit."
+            "message": "ANALYSIS REJECTED: This image does not contain a valid plant specimen. Please ensure you are uploading a clear, well-lit photo of a crop leaf."
         }
 
     features_scaled = NIR_SCALER.transform(features)
