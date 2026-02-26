@@ -380,6 +380,24 @@ async def analyze_nir_image(file: UploadFile = File(...)):
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
     features = extract_nir_features(img)
+    
+    # ── VALIDATION HEURISTIC ──
+    # features[0][0] is vi_mean (Vegetation Index)
+    # features[0][6] is edge_density
+    vi_mean = features[0][0]
+    edge_density = features[0][6]
+    
+    # Heuristic: Plant images typically have high VI (green contrast) 
+    # and a certain range of edge density (organic structure).
+    # Attendance photos/faces/rooms usually have low VI or very different texture.
+    is_plant = (vi_mean > -0.05) and (edge_density > 0.01)
+    
+    if not is_plant:
+        return {
+            "error": "invalid_specimen",
+            "message": "The image does not look like a valid plant specimen. Please ensure the leaf is clearly visible and well-lit."
+        }
+
     features_scaled = NIR_SCALER.transform(features)
 
     prob = float(NIR_MODEL.predict_proba(features_scaled)[0][1])
