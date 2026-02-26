@@ -381,25 +381,24 @@ async def analyze_nir_image(file: UploadFile = File(...)):
 
     features = extract_nir_features(img)
     
-    # ── VALIDATION HEURISTIC (FIXED) ──
-    # features[0][0] is vi_mean (Vegetation Index) where vi = (r - g) / (r + g)
-    # For green leaves, g > r, so vi_mean is NEGATIVE (e.g., -0.3 to -0.6).
-    # For non-plants (skin, walls, dirt), r >= g, so vi_mean is POSITIVE or zero.
+    # ── RELAXED VALIDATION HEURISTIC ──
+    # Loosened to support NIR-modified cameras which might not appear "Green"
     vi_mean = features[0][0]
     edge_density = features[0][6]
     
     print(f"🔍 NIR VALIDATION: VI={vi_mean:.4f}, Texture={edge_density:.4f}")
 
-    # Heuristic: 
-    # 1. Must be green enough (vi_mean < -0.05)
-    # 2. Must have minimal organic texture/edges (edge_density > 0.015)
-    is_plant = (vi_mean < -0.05) and (edge_density > 0.015)
+    # Broadened heuristic:
+    # 1. Blocks extremely Red/White flat surfaces (VI > 0.4 and low texture)
+    # 2. Most leaves (even NIR) will fall below VI 0.4 or have higher texture than 0.008
+    is_plant = not (vi_mean > 0.4 and edge_density < 0.008)
     
     if not is_plant:
-        print("❌ VALIDATION FAILED: Image rejected as non-plant specimen.")
+        print(f"❌ VALIDATION FAILED: VI={vi_mean:.2f}, Texture={edge_density:.4f}")
         return {
             "error": "invalid_specimen",
-            "message": "ANALYSIS REJECTED: This image does not contain a valid plant specimen. Please ensure you are uploading a clear, well-lit photo of a crop leaf."
+            "message": f"ANALYSIS REJECTED: Low confidence in plant specimen (Color Index: {vi_mean:.2f}, Texture: {edge_density:.4f}). Ensure the leaf covers most of the frame.",
+            "debug": {"vi": vi_mean, "edge": edge_density}
         }
 
     features_scaled = NIR_SCALER.transform(features)
