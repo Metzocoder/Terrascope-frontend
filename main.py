@@ -782,11 +782,48 @@ def district_ndvi_summary():
                     "lon": district['lon']
                 })
         
+        # Generate Maharashtra heatmap image URL
+        heatmap_url = None
+        try:
+            # Define Maharashtra bounds
+            maharashtra = ee.Geometry.Rectangle([72.6, 15.6, 80.9, 22.0])
+            
+            # Get recent Sentinel-2 data
+            collection = (
+                ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+                .filterBounds(maharashtra)
+                .filterDate(str(start_date), str(today))
+                .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 30))
+            )
+            
+            # Calculate NDVI
+            def add_ndvi(image):
+                ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
+                return image.addBands(ndvi)
+            
+            ndvi_collection = collection.map(add_ndvi)
+            ndvi_median = ndvi_collection.select('NDVI').median()
+            
+            # Generate heatmap image URL with proper color palette
+            heatmap_url = ndvi_median.getThumbURL({
+                'min': 0.0,
+                'max': 0.8,
+                'palette': ['8B0000', 'FF4500', 'FFD700', '7FFF00', '006400'],  # Red to Green
+                'dimensions': 800,
+                'region': maharashtra,
+                'format': 'png'
+            })
+            print(f"✅ Generated heatmap URL: {heatmap_url[:100]}...")
+        except Exception as e:
+            print(f"⚠️ Heatmap generation failed: {e}")
+            heatmap_url = None
+        
         return {
             "success": True,
             "date_range": f"{start_date} to {today}",
             "total_districts": len(results),
-            "districts": results
+            "districts": results,
+            "heatmap_url": heatmap_url
         }
     
     except Exception as e:
