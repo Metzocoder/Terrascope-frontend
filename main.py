@@ -226,6 +226,40 @@ def get_zone_color(value: float, index_type: str = "NDVI") -> str:
             return "#FF0000"
     return "#808080"
 
+def get_zone_recommendation(ndvi: float, ndmi: float) -> str:
+    """Get specific recommendation for a zone based on NDVI and NDMI"""
+    # Critical zones (NDVI < 0.3)
+    if ndvi < 0.3:
+        if ndmi < 0.1:
+            return "Critical: Immediate irrigation and fertilization needed"
+        elif ndmi < 0.2:
+            return "Critical: Apply fertilizer and monitor water stress"
+        else:
+            return "Critical: Nutrient deficiency detected, apply fertilizer"
+    
+    # Stressed zones (NDVI 0.3-0.5)
+    elif ndvi < 0.5:
+        if ndmi < 0.15:
+            return "Stressed: Increase irrigation frequency"
+        elif ndmi < 0.25:
+            return "Stressed: Monitor water levels and consider light fertilization"
+        else:
+            return "Stressed: Consider pest inspection and nutrient boost"
+    
+    # Moderate zones (NDVI 0.5-0.6)
+    elif ndvi < 0.6:
+        if ndmi < 0.2:
+            return "Moderate: Maintain irrigation schedule"
+        else:
+            return "Moderate: Continue current practices, monitor regularly"
+    
+    # Healthy zones (NDVI >= 0.6)
+    else:
+        if ndmi < 0.25:
+            return "Healthy: Maintain irrigation to sustain growth"
+        else:
+            return "Healthy: Excellent condition, continue current practices"
+
 # =====================================================
 # NIR FEATURE EXTRACTION
 # =====================================================
@@ -360,6 +394,9 @@ def analyze_field(data: FieldRequest):
     
     # GRID ANALYSIS - Divide field into zones for detailed analysis
     zones = []
+    zone_ndvi_values = []
+    zone_ndmi_values = []
+    
     if data.polygon:
         try:
             bounds = geometry.bounds().getInfo()['coordinates'][0]
@@ -409,24 +446,43 @@ def analyze_field(data: FieldRequest):
                         center_lat = (zone_min_lat + zone_max_lat) / 2
                         center_lon = (zone_min_lon + zone_max_lon) / 2
                         
+                        # Ensure NDMI has a valid value (use 0 if None)
+                        zone_ndmi_safe = zone_ndmi if zone_ndmi is not None else 0.0
+                        
+                        # Collect values for averaging
+                        zone_ndvi_values.append(zone_ndvi)
+                        if zone_ndmi is not None:
+                            zone_ndmi_values.append(zone_ndmi)
+                        
                         zones.append({
                             "zone_id": zone_id,
+                            "row": i,
+                            "col": j,
                             "center_lat": center_lat,
                             "center_lon": center_lon,
                             "ndvi": round(zone_ndvi, 3),
-                            "ndmi": round(zone_ndmi, 3) if zone_ndmi else 0,
+                            "ndmi": round(zone_ndmi_safe, 3),
                             "stress_level": get_stress_level(zone_ndvi),
                             "color": get_zone_color(zone_ndvi, "NDVI"),
                             "crop_score": ndvi_to_score(zone_ndvi, crop),
-                            "water_score": ndmi_to_score(zone_ndmi, crop) if zone_ndmi else 0,
-                            "recommendation": "Immediate attention needed" if zone_ndvi < 0.3 else 
-                                           "Monitor closely" if zone_ndvi < 0.5 else 
-                                           "Healthy - continue current practices"
+                            "water_score": ndmi_to_score(zone_ndmi_safe, crop),
+                            "recommendation": get_zone_recommendation(zone_ndvi, zone_ndmi_safe)
                         })
                         zone_id += 1
         except Exception as e:
             print(f"Zone analysis failed: {e}")
             # Continue without zones if analysis fails
+    
+    # Calculate overall scores as average of all zones (if zones exist)
+    if zones:
+        avg_zone_ndvi = sum(zone_ndvi_values) / len(zone_ndvi_values) if zone_ndvi_values else ndvi_val
+        avg_zone_ndmi = sum(zone_ndmi_values) / len(zone_ndmi_values) if zone_ndmi_values else ndmi_val
+        
+        # Use zone averages for overall scores
+        ndvi_val = round(avg_zone_ndvi, 3)
+        ndmi_val = round(avg_zone_ndmi, 3)
+        crop_score = ndvi_to_score(ndvi_val, crop)
+        water_score = ndmi_to_score(ndmi_val, crop)
     
     # Get exact satellite date from most recent image
     satellite_date = "Unknown"
