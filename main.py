@@ -98,30 +98,32 @@ class LandMeasurementRequest(BaseModel):
 # =====================================================
 # CROP-SPECIFIC CONFIG
 # =====================================================
+# CROP CONFIG - RELAXED THRESHOLDS FOR REALISTIC SCORING
+# =====================================================
 CROP_CONFIG = {
     "general": {
-        "ndvi": {"very_poor": 0.25, "poor": 0.40, "good": 0.60},
-        "ndmi": {"very_dry": 0.08, "dry": 0.18, "optimal": 0.30},
+        "ndvi": {"very_poor": 0.15, "poor": 0.30, "good": 0.50},  # Relaxed from 0.25/0.40/0.60
+        "ndmi": {"very_dry": 0.05, "dry": 0.15, "optimal": 0.25},  # Relaxed from 0.08/0.18/0.30
     },
     "cotton": {
-        "ndvi": {"very_poor": 0.28, "poor": 0.45, "good": 0.65},
-        "ndmi": {"very_dry": 0.10, "dry": 0.22, "optimal": 0.35},
+        "ndvi": {"very_poor": 0.18, "poor": 0.35, "good": 0.55},  # Relaxed from 0.28/0.45/0.65
+        "ndmi": {"very_dry": 0.08, "dry": 0.18, "optimal": 0.30},  # Relaxed from 0.10/0.22/0.35
     },
     "rice": {
-        "ndvi": {"very_poor": 0.35, "poor": 0.55, "good": 0.75},
-        "ndmi": {"very_dry": 0.25, "dry": 0.40, "optimal": 0.55},
+        "ndvi": {"very_poor": 0.25, "poor": 0.45, "good": 0.65},  # Relaxed from 0.35/0.55/0.75
+        "ndmi": {"very_dry": 0.20, "dry": 0.35, "optimal": 0.50},  # Relaxed from 0.25/0.40/0.55
     },
     "wheat": {
-        "ndvi": {"very_poor": 0.30, "poor": 0.48, "good": 0.65},
-        "ndmi": {"very_dry": 0.12, "dry": 0.25, "optimal": 0.38},
+        "ndvi": {"very_poor": 0.20, "poor": 0.38, "good": 0.55},  # Relaxed from 0.30/0.48/0.65
+        "ndmi": {"very_dry": 0.10, "dry": 0.20, "optimal": 0.33},  # Relaxed from 0.12/0.25/0.38
     },
     "soybean": {
-        "ndvi": {"very_poor": 0.28, "poor": 0.45, "good": 0.65},
-        "ndmi": {"very_dry": 0.10, "dry": 0.20, "optimal": 0.35},
+        "ndvi": {"very_poor": 0.18, "poor": 0.35, "good": 0.55},  # Relaxed from 0.28/0.45/0.65
+        "ndmi": {"very_dry": 0.08, "dry": 0.18, "optimal": 0.30},  # Relaxed from 0.10/0.20/0.35
     },
     "sugarcane": {
-        "ndvi": {"very_poor": 0.40, "poor": 0.55, "good": 0.70},
-        "ndmi": {"very_dry": 0.15, "dry": 0.28, "optimal": 0.42},
+        "ndvi": {"very_poor": 0.30, "poor": 0.45, "good": 0.60},  # Relaxed from 0.40/0.55/0.70
+        "ndmi": {"very_dry": 0.12, "dry": 0.23, "optimal": 0.37},  # Relaxed from 0.15/0.28/0.42
     },
 }
 
